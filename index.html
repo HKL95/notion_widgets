@@ -5,62 +5,225 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>File Viewer</title>
     <style>
+        :root {
+            --primary-color: #4a90e2;
+            --secondary-color: #f8f9fa;
+            --border-color: #e1e4e8;
+            --text-color: #24292e;
+            --success-color: #28a745;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            background-color: var(--secondary-color);
+        }
+
         .container {
             max-width: 1200px;
             margin: 0 auto;
-            padding: 20px;
+            padding: 16px;
+        }
+
+        h2 {
+            color: var(--primary-color);
+            margin-bottom: 24px;
+            font-size: 1.8rem;
+            text-align: center;
+        }
+
+        h3 {
+            color: var(--text-color);
+            margin: 20px 0 12px;
+            font-size: 1.2rem;
+        }
+
+        .file-input-wrapper {
+            background: white;
+            padding: 16px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 24px;
+        }
+
+        .content-controls {
+            display: none;
+            margin-top: 16px;
+        }
+
+        .content-controls.active {
+            display: block;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .file-label {
+            display: inline-block;
+            padding: 12px 24px;
+            background: var(--primary-color);
+            color: white;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+            text-align: center;
+            width: 100%;
+            margin-bottom: 12px;
+        }
+
+        .file-label:hover {
+            background: #357abd;
+        }
+
+        .table-wrapper {
+            width: 100%;
+            overflow-x: auto;
+            margin-top: 16px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
 
         table {
             border-collapse: collapse;
             width: 100%;
-            margin-top: 20px;
+            margin: 0;
+            background: white;
+            font-size: 0.9rem;
         }
 
         th, td {
-            border: 1px solid #ddd;
+            border: 1px solid var(--border-color);
             padding: 8px;
             text-align: left;
+            white-space: nowrap;
+            max-width: 300px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        td {
+            min-width: 100px;
         }
 
         th {
-            background-color: #f2f2f2;
+            background-color: var(--primary-color);
+            color: white;
         }
 
         .image-container {
-            position: relative;
-            margin-top: 20px;
-            text-align: center;
+            background: white;
+            border-radius: 12px;
             overflow: hidden;
-            max-height: 80vh;  /* Limit maximum height */
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-top: 16px;
         }
 
         .zoom-controls {
             position: sticky;
             top: 0;
-            background: rgba(255, 255, 255, 0.9);
-            padding: 10px;
+            background: white;
+            padding: 12px;
             z-index: 100;
-            border-bottom: 1px solid #ddd;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .image-wrapper {
+            min-height: 200px;
+            max-height: 70vh;
+            position: relative;
+            overflow: auto;
+            padding: 16px;
         }
 
         #preview-image {
             max-width: 100%;
             transition: transform 0.3s ease;
             transform-origin: center center;
-        }
-
-        .image-wrapper {
-            min-height: 200px;
-            position: relative;
-            overflow: auto;
-            margin-top: 10px;
+            border-radius: 8px;
         }
 
         button {
-            padding: 5px 10px;
-            margin: 0 5px;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            background: var(--primary-color);
+            color: white;
             cursor: pointer;
+            transition: background 0.3s ease;
+            font-weight: 500;
+            flex: 1;
+            max-width: 120px;
+        }
+
+        button:hover {
+            background: #357abd;
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            .container {
+                padding: 12px;
+            }
+
+            h2 {
+                font-size: 1.5rem;
+            }
+
+            button {
+                padding: 8px 16px;
+                font-size: 0.9rem;
+            }
+
+            th, td {
+                padding: 6px;
+                font-size: 0.85rem;
+                max-width: 200px;
+            }
+
+            td {
+                min-width: 80px;
+            }
+
+            .image-wrapper {
+                max-height: 50vh;
+            }
+        }
+
+        /* Add loading indicator */
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+            color: var(--primary-color);
+        }
+
+        .loading.active {
+            display: block;
+        }
+
+        /* Add horizontal scroll indicator */
+        .scroll-indicator {
+            display: none;
+            text-align: center;
+            color: var(--primary-color);
+            font-size: 0.8rem;
+            margin-top: 8px;
+        }
+
+        .scroll-indicator.active {
+            display: block;
         }
     </style>
 </head>
@@ -68,51 +231,96 @@
     <div class="container">
         <h2>File Viewer</h2>
         
-        <div>
-            <h3>CSV File</h3>
-            <input type="file" id="csvFile" accept=".csv">
-            <div id="tableContainer"></div>
-        </div>
-
-        <div>
-            <h3>Image Viewer</h3>
-            <input type="file" id="imageFile" accept="image/*">
-            <div class="image-container">
-                <div class="zoom-controls">
-                    <button onclick="zoomIn()">Zoom In (+)</button>
-                    <button onclick="zoomOut()">Zoom Out (-)</button>
-                    <button onclick="resetZoom()">Reset</button>
+        <div class="file-input-wrapper">
+            <h3>File Viewer</h3>
+            <label for="fileInput" class="file-label">Choose File</label>
+            <input type="file" id="fileInput" accept=".csv,image/*">
+            
+            <!-- CSV Controls -->
+            <div id="csvControls" class="content-controls">
+                <div class="loading" id="csvLoading">Loading CSV...</div>
+                <div class="table-wrapper">
+                    <div id="tableContainer"></div>
                 </div>
-                <div class="image-wrapper">
-                    <img id="preview-image" style="display: none;">
+                <div id="scrollIndicator" class="scroll-indicator">
+                    ← Scroll horizontally to see more →
+                </div>
+            </div>
+
+            <!-- Image Controls -->
+            <div id="imageControls" class="content-controls">
+                <div class="image-container">
+                    <div class="zoom-controls">
+                        <button onclick="zoomIn()">Zoom In</button>
+                        <button onclick="resetZoom()">Reset</button>
+                        <button onclick="zoomOut()">Zoom Out</button>
+                    </div>
+                    <div class="image-wrapper">
+                        <img id="preview-image" style="display: none;">
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
     <script>
-        // CSV handling
-        document.getElementById('csvFile').addEventListener('change', function(e) {
+        const fileInput = document.getElementById('fileInput');
+        const csvControls = document.getElementById('csvControls');
+        const imageControls = document.getElementById('imageControls');
+
+        fileInput.addEventListener('change', function(e) {
             const file = e.target.files[0];
-            const reader = new FileReader();
             
+            // Hide all controls first
+            csvControls.classList.remove('active');
+            imageControls.classList.remove('active');
+            
+            if (file) {
+                if (file.type === 'text/csv' || file.name.endsWith('.csv')) {
+                    handleCSV(file);
+                } else if (file.type.startsWith('image/')) {
+                    handleImage(file);
+                }
+            }
+        });
+
+        function handleCSV(file) {
+            csvControls.classList.add('active');
+            const loadingElement = document.getElementById('csvLoading');
+            loadingElement.classList.add('active');
+            
+            const reader = new FileReader();
             reader.onload = function(event) {
                 const csvData = event.target.result;
                 const rows = csvData.split('\n');
                 let tableHTML = '<table>';
                 
+                // Calculate optimal column widths
+                const columnWidths = [];
+                rows.forEach(row => {
+                    const cells = row.split(',');
+                    cells.forEach((cell, index) => {
+                        const cellLength = cell.trim().length;
+                        if (!columnWidths[index] || cellLength > columnWidths[index]) {
+                            columnWidths[index] = cellLength;
+                        }
+                    });
+                });
+
                 rows.forEach((row, index) => {
                     const cells = row.split(',');
                     if (index === 0) {
                         tableHTML += '<tr>';
-                        cells.forEach(cell => {
-                            tableHTML += `<th>${cell.trim()}</th>`;
+                        cells.forEach((cell, cellIndex) => {
+                            const width = Math.min(300, Math.max(100, columnWidths[cellIndex] * 8));
+                            tableHTML += `<th style="min-width: ${width}px">${cell.trim()}</th>`;
                         });
                         tableHTML += '</tr>';
-                    } else {
+                    } else if (row.trim()) { // Skip empty rows
                         tableHTML += '<tr>';
-                        cells.forEach(cell => {
-                            tableHTML += `<td>${cell.trim()}</td>`;
+                        cells.forEach((cell, cellIndex) => {
+                            const width = Math.min(300, Math.max(100, columnWidths[cellIndex] * 8));
+                            tableHTML += `<td style="min-width: ${width}px">${cell.trim()}</td>`;
                         });
                         tableHTML += '</tr>';
                     }
@@ -120,19 +328,36 @@
                 
                 tableHTML += '</table>';
                 document.getElementById('tableContainer').innerHTML = tableHTML;
+                loadingElement.classList.remove('active');
+
+                // Check if table needs horizontal scrolling
+                const tableWrapper = document.querySelector('.table-wrapper');
+                const scrollIndicator = document.getElementById('scrollIndicator');
+                
+                if (tableWrapper.scrollWidth > tableWrapper.clientWidth) {
+                    scrollIndicator.classList.add('active');
+                } else {
+                    scrollIndicator.classList.remove('active');
+                }
+
+                // Add scroll listener to hide indicator when reached end
+                tableWrapper.addEventListener('scroll', function() {
+                    const nearEnd = this.scrollLeft + this.clientWidth >= this.scrollWidth - 50;
+                    const nearStart = this.scrollLeft <= 50;
+                    
+                    if (nearEnd || nearStart) {
+                        scrollIndicator.style.opacity = '0.3';
+                    } else {
+                        scrollIndicator.style.opacity = '1';
+                    }
+                });
             };
             
             reader.readAsText(file);
-        });
+        }
 
-        // Image handling
-        let scale = 1;
-        const ZOOM_STEP = 0.1;
-        const MAX_ZOOM = 3;
-        const MIN_ZOOM = 0.5;
-
-        document.getElementById('imageFile').addEventListener('change', function(e) {
-            const file = e.target.files[0];
+        function handleImage(file) {
+            imageControls.classList.add('active');
             const reader = new FileReader();
             
             reader.onload = function(event) {
@@ -143,7 +368,12 @@
             };
             
             reader.readAsDataURL(file);
-        });
+        }
+
+        let scale = 1;
+        const ZOOM_STEP = 0.1;
+        const MAX_ZOOM = 3;
+        const MIN_ZOOM = 0.5;
 
         function zoomIn() {
             if (scale < MAX_ZOOM) {
