@@ -1,1 +1,173 @@
-Hello World!
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>File Viewer</title>
+    <style>
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+
+        .image-container {
+            position: relative;
+            margin-top: 20px;
+            text-align: center;
+            overflow: hidden;
+            max-height: 80vh;  /* Limit maximum height */
+        }
+
+        .zoom-controls {
+            position: sticky;
+            top: 0;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 10px;
+            z-index: 100;
+            border-bottom: 1px solid #ddd;
+        }
+
+        #preview-image {
+            max-width: 100%;
+            transition: transform 0.3s ease;
+            transform-origin: center center;
+        }
+
+        .image-wrapper {
+            min-height: 200px;
+            position: relative;
+            overflow: auto;
+            margin-top: 10px;
+        }
+
+        button {
+            padding: 5px 10px;
+            margin: 0 5px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>File Viewer</h2>
+        
+        <div>
+            <h3>CSV File</h3>
+            <input type="file" id="csvFile" accept=".csv">
+            <div id="tableContainer"></div>
+        </div>
+
+        <div>
+            <h3>Image Viewer</h3>
+            <input type="file" id="imageFile" accept="image/*">
+            <div class="image-container">
+                <div class="zoom-controls">
+                    <button onclick="zoomIn()">Zoom In (+)</button>
+                    <button onclick="zoomOut()">Zoom Out (-)</button>
+                    <button onclick="resetZoom()">Reset</button>
+                </div>
+                <div class="image-wrapper">
+                    <img id="preview-image" style="display: none;">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // CSV handling
+        document.getElementById('csvFile').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            const reader = new FileReader();
+            
+            reader.onload = function(event) {
+                const csvData = event.target.result;
+                const rows = csvData.split('\n');
+                let tableHTML = '<table>';
+                
+                rows.forEach((row, index) => {
+                    const cells = row.split(',');
+                    if (index === 0) {
+                        tableHTML += '<tr>';
+                        cells.forEach(cell => {
+                            tableHTML += `<th>${cell.trim()}</th>`;
+                        });
+                        tableHTML += '</tr>';
+                    } else {
+                        tableHTML += '<tr>';
+                        cells.forEach(cell => {
+                            tableHTML += `<td>${cell.trim()}</td>`;
+                        });
+                        tableHTML += '</tr>';
+                    }
+                });
+                
+                tableHTML += '</table>';
+                document.getElementById('tableContainer').innerHTML = tableHTML;
+            };
+            
+            reader.readAsText(file);
+        });
+
+        // Image handling
+        let scale = 1;
+        const ZOOM_STEP = 0.1;
+        const MAX_ZOOM = 3;
+        const MIN_ZOOM = 0.5;
+
+        document.getElementById('imageFile').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            const reader = new FileReader();
+            
+            reader.onload = function(event) {
+                const img = document.getElementById('preview-image');
+                img.src = event.target.result;
+                img.style.display = 'inline-block';
+                resetZoom();
+            };
+            
+            reader.readAsDataURL(file);
+        });
+
+        function zoomIn() {
+            if (scale < MAX_ZOOM) {
+                scale += ZOOM_STEP;
+                updateZoom();
+            }
+        }
+
+        function zoomOut() {
+            if (scale > MIN_ZOOM) {
+                scale -= ZOOM_STEP;
+                updateZoom();
+            }
+        }
+
+        function resetZoom() {
+            scale = 1;
+            updateZoom();
+        }
+
+        function updateZoom() {
+            const img = document.getElementById('preview-image');
+            img.style.transform = `scale(${scale})`;
+        }
+    </script>
+</body>
+</html> 
